@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spacebook</title>
+<style>
+  /* ===== RESET & BASE ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    background: #f0f2f5;
+    color: #1c1e21;
+    font-size: 15px;
+    line-height: 1.34;
+  }
+  a { color: #1877f2; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  img { display: block; max-width: 100%; }
+
+  /* ===== TOP NAVBAR ===== */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    background: #1a1a2e;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.3);
+  }
+  .navbar-logo {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .navbar-logo svg { width: 40px; height: 40px; }
+  .navbar-logo span {
+    font-size: 24px; font-weight: 700; color: #00ccff;
+    letter-spacing: 1px;
+  }
+  .navbar-search {
+    background: #2a2a4a; border: none; border-radius: 20px;
+    padding: 8px 16px; width: 280px; color: #ccc; font-size: 14px;
+    outline: none;
+  }
+  .navbar-search::placeholder { color: #777; }
+  .navbar-icons {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .nav-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #2a2a4a; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+  }
+  .nav-icon svg { width: 20px; height: 20px; fill: #b0b3b8; }
+  .nav-icon:hover { background: #3a3a5a; }
+  .nav-badge {
+    position: absolute; top: -2px; right: -2px;
+    background: #e41e3f; color: white; font-size: 11px; font-weight: 700;
+    border-radius: 50%; width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    object-fit: cover; cursor: pointer; border: 2px solid #3a3a5a;
+  }
+
+  /* ===== PROFILE HEADER ===== */
+  .profile-header {
+    max-width: 940px; margin: 0 auto;
+  }
+  .cover-photo {
+    width: 100%; height: 350px;
+    background: linear-gradient(135deg, #0a0a18 0%, #1a1a3e 40%, #0d2a4a 70%, #0a0a18 100%);
+    border-radius: 0 0 8px 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* EDIT: Replace this src with your own cover image */
+  .cover-photo img {
+    width: 100%; height: 100%; object-fit: contain;
+    background: #0a0a18;
+  }
+  .cover-photo-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    color: #4a4a6a; font-size: 14px; font-style: italic;
+  }
+  .profile-info-bar {
+    display: flex; align-items: flex-end; gap: 16px;
+    padding: 0 32px; margin-top: -40px; position: relative; z-index: 10;
+  }
+  .profile-pic-wrapper {
+    flex-shrink: 0;
+  }
+  .profile-pic {
+    width: 168px; height: 168px; border-radius: 50%;
+    border: 5px solid white; object-fit: cover;
+    background: #3a3a5a;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .profile-pic-placeholder {
+    width: 168px; height: 168px; border-radius: 50%;
+    border: 5px solid white; background: #2a2a4a;
+    display: flex; align-items: center; justify-content: center;
+    color: #6a6a8a; font-size: 48px; box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .profile-name-section {
+    padding-bottom: 16px; flex: 1;
+  }
+  .profile-name {
+    font-size: 32px; font-weight: 800; color: #1c1e21;
+  }
+  .profile-bio {
+    color: #65676b; font-size: 15px; margin-top: 2px;
+  }
+  .profile-actions {
+    display: flex; gap: 8px; padding-bottom: 16px;
+  }
+  .btn {
+    padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none; display: flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: #1877f2; color: white; }
+  .btn-primary:hover { background: #166fe5; }
+  .btn-secondary { background: #e4e6eb; color: #1c1e21; }
+  .btn-secondary:hover { background: #d8dadf; }
+
+  /* ===== PROFILE TABS ===== */
+  .profile-tabs {
+    max-width: 940px; margin: 0 auto;
+    border-top: 1px solid #dadde1;
+    display: flex; gap: 4px; padding: 4px 16px 0;
+    background: white; border-radius: 0 0 8px 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  }
+  .profile-tab {
+    padding: 12px 16px; font-size: 15px; font-weight: 600; color: #65676b;
+    cursor: pointer; border-bottom: 3px solid transparent;
+    transition: all .15s;
+  }
+  .profile-tab:hover { background: #f0f2f5; border-radius: 6px 6px 0 0; }
+  .profile-tab.active { color: #1877f2; border-bottom-color: #1877f2; }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main-layout {
+    max-width: 940px; margin: 16px auto 0; padding: 0 16px;
+    display: grid; grid-template-columns: 360px 1fr; gap: 16px;
+    align-items: start;
+  }
+
+  /* ===== LEFT SIDEBAR ===== */
+  .sidebar-card {
+    background: white; border-radius: 8px; padding: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.1); margin-bottom: 16px;
+  }
+  .sidebar-card h3 {
+    font-size: 20px; font-weight: 800; margin-bottom: 12px;
+  }
+  .intro-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 10px; color: #1c1e21; font-size: 15px;
+  }
+  .intro-item svg { width: 20px; height: 20px; fill: #65676b; flex-shrink: 0; margin-top: 2px; }
+  .intro-item a { font-weight: 600; }
+
+  /* Friends grid */
+  .friends-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .friends-header h3 { margin-bottom: 0; }
+  .friends-header .count { font-size: 17px; color: #65676b; font-weight: 400; }
+  .friends-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .friend-card img, .friend-card .friend-placeholder {
+    width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover;
+    background: #e4e6eb;
+  }
+  .friend-card .friend-placeholder {
+    display: flex; align-items: center; justify-content: center;
+    color: #bbb; font-size: 24px;
+  }
+  .friend-card .friend-name {
+    font-size: 13px; font-weight: 600; margin-top: 4px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ===== POSTS FEED ===== */
+  .feed { min-width: 0; }
+
+  /* Create post box */
+  .create-post {
+    background: white; border-radius: 8px; padding: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.1); margin-bottom: 16px;
+  }
+  .create-post-top {
+    display: flex; gap: 8px; align-items: center;
+    padding-bottom: 12px; border-bottom: 1px solid #dadde1;
+  }
+  .create-post-top img {
+    width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+  }
+  .create-post-input {
+    flex: 1; background: #f0f2f5; border-radius: 20px;
+    padding: 10px 16px; color: #65676b; cursor: text; font-size: 15px;
+  }
+  .create-post-actions {
+    display: flex; justify-content: space-around; padding-top: 10px;
+  }
+  .create-action {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #65676b;
+  }
+  .create-action:hover { background: #f0f2f5; }
+  .create-action .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-live { background: #f3425f; }
+  .dot-photo { background: #45bd62; }
+  .dot-feeling { background: #f7b928; }
+
+  /* Post card */
+  .post-card {
+    background: white; border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.1); margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .post-header {
+    display: flex; gap: 10px; padding: 12px 16px 0; align-items: center;
+  }
+  .post-avatar {
+    width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+    background: #e4e6eb; flex-shrink: 0;
+  }
+  .post-meta { flex: 1; }
+  .post-author { font-weight: 600; font-size: 15px; }
+  .post-timestamp { font-size: 13px; color: #65676b; }
+  .post-privacy { font-size: 12px; color: #65676b; }
+  .post-menu {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #65676b; font-size: 20px;
+  }
+  .post-menu:hover { background: #f0f2f5; }
+  .post-body { padding: 8px 16px 0; font-size: 15px; line-height: 1.4; }
+  .post-body p { margin-bottom: 6px; }
+  .post-body .hashtag { color: #1877f2; font-weight: 600; }
+  .post-image {
+    margin-top: 10px; width: 100%;
+    background: #1a1a2e; min-height: 200px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .post-image img { width: 100%; display: block; }
+  .post-image-placeholder {
+    color: #4a4a6a; font-style: italic; padding: 40px; text-align: center;
+    font-size: 14px;
+  }
+
+  /* Shared link preview */
+  .link-preview {
+    margin: 10px 16px 0; border: 1px solid #dadde1; border-radius: 8px;
+    overflow: hidden;
+  }
+  .link-preview-image {
+    width: 100%; height: 200px; background: #e4e6eb;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .link-preview-image img { width: 100%; height: 100%; object-fit: cover; }
+  .link-preview-text {
+    padding: 12px; background: #f0f2f5;
+  }
+  .link-preview-domain { font-size: 12px; color: #65676b; text-transform: uppercase; }
+  .link-preview-title { font-size: 16px; font-weight: 600; margin-top: 2px; }
+  .link-preview-desc { font-size: 14px; color: #65676b; margin-top: 4px; }
+
+  /* Reactions bar */
+  .post-reactions-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; font-size: 15px; color: #65676b;
+  }
+  .reaction-icons { display: flex; align-items: center; gap: 2px; }
+  .reaction-emoji {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; border: 2px solid white;
+    margin-right: -4px; position: relative;
+  }
+  .reaction-emoji.r-like { background: #1877f2; }
+  .reaction-emoji.r-love { background: #f33e58; }
+  .reaction-emoji.r-haha { background: #f7b928; }
+  .reaction-emoji.r-wow { background: #f7b928; }
+  .reaction-emoji.r-sad { background: #f7b928; }
+  .reaction-emoji.r-angry { background: #e9710f; }
+  .reaction-count { margin-left: 8px; }
+  .engagement-counts a { color: #65676b; }
+  .engagement-counts a:hover { text-decoration: underline; }
+
+  /* Action buttons */
+  .post-actions {
+    display: flex; border-top: 1px solid #dadde1;
+    margin: 0 16px; padding: 4px 0;
+  }
+  .post-action-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 0; border-radius: 6px; cursor: pointer;
+    font-size: 15px; font-weight: 600; color: #65676b;
+  }
+  .post-action-btn:hover { background: #f0f2f5; }
+  .post-action-btn svg { width: 20px; height: 20px; fill: #65676b; }
+
+  /* Comments */
+  .post-comments { padding: 6px 16px 12px; }
+  .comment {
+    display: flex; gap: 8px; margin-bottom: 8px;
+  }
+  .comment-avatar {
+    width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+    background: #e4e6eb; flex-shrink: 0;
+  }
+  .comment-bubble {
+    background: #f0f2f5; border-radius: 18px; padding: 8px 12px;
+    max-width: 80%;
+  }
+  .comment-author { font-weight: 600; font-size: 13px; }
+  .comment-text { font-size: 15px; }
+  .comment-actions {
+    display: flex; gap: 16px; padding-left: 12px; margin-top: 2px;
+    font-size: 12px; font-weight: 700; color: #65676b;
+  }
+  .comment-actions span { cursor: pointer; }
+  .comment-actions span:hover { text-decoration: underline; }
+  .comment-time { font-weight: 400; }
+  .write-comment {
+    display: flex; gap: 8px; align-items: center; margin-top: 6px;
+  }
+  .write-comment img {
+    width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+  }
+  .write-comment-input {
+    flex: 1; background: #f0f2f5; border: none; border-radius: 20px;
+    padding: 8px 14px; font-size: 14px; color: #1c1e21; outline: none;
+  }
+
+  /* ===== SEE MORE ===== */
+  .post-body-hidden {
+    display: none;
+  }
+  .post-body-hidden.expanded {
+    display: block;
+  }
+  .see-more {
+    color: #65676b; font-weight: 600; cursor: pointer;
+    font-size: 15px; padding: 0;
+    background: none; border: none; font-family: inherit;
+  }
+  .see-more:hover { color: #1c1e21; }
+
+  /* ===== FRIEND REQUEST DROPDOWN ===== */
+  .nav-icon-wrapper {
+    position: relative;
+  }
+  .fr-dropdown {
+    position: absolute; top: 48px; right: -60px;
+    width: 360px; background: white; border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25); z-index: 200;
+    overflow: hidden;
+  }
+  .fr-dropdown-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 16px 8px; font-size: 20px; font-weight: 800; color: #1c1e21;
+  }
+  .fr-dropdown-header a { font-size: 14px; font-weight: 400; }
+  .fr-request {
+    display: flex; gap: 12px; padding: 12px 16px; align-items: center;
+    transition: background .15s;
+  }
+  .fr-request:hover { background: #f0f2f5; }
+  .fr-request-avatar {
+    width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+    flex-shrink: 0;
+  }
+  .fr-request-info { flex: 1; }
+  .fr-request-name { font-weight: 600; font-size: 15px; color: #1c1e21; }
+  .fr-request-mutual { font-size: 13px; color: #65676b; margin-top: 2px; }
+  .fr-request-buttons { display: flex; gap: 8px; margin-top: 8px; }
+  .fr-btn-accept {
+    flex: 1; padding: 6px 0; border: none; border-radius: 6px;
+    background: #1877f2; color: white; font-size: 14px; font-weight: 600;
+    cursor: pointer; text-align: center;
+  }
+  .fr-btn-accept:hover { background: #166fe5; }
+  .fr-btn-decline {
+    flex: 1; padding: 6px 0; border: none; border-radius: 6px;
+    background: #e4e6eb; color: #1c1e21; font-size: 14px; font-weight: 600;
+    cursor: pointer; text-align: center;
+  }
+  .fr-btn-decline:hover { background: #d8dadf; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 960px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .sidebar { order: 2; }
+  }
+
+  /* ===== UTILITY ===== */
+  .text-muted { color: #65676b; }
+  .separator { border-top: 1px solid #dadde1; margin: 12px 0; }
+
+  /* ===== EDIT HINTS (remove for final version) ===== */
+  [data-edit]::before {
+    /* Uncomment below to show edit hints as overlays */
+    /* content: attr(data-edit);
+    position: absolute; top: 2px; left: 2px;
+    background: rgba(255,0,0,.8); color: white;
+    font-size: 10px; padding: 2px 6px; border-radius: 3px;
+    z-index: 50; pointer-events: none; */
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAVBAR
+     ============================================================ -->
+<nav class="navbar">
+  <div class="navbar-logo">
+    <!-- Spacebook Logo - Death Star parody -->
+    <svg viewBox="0 0 200 200">
+      <defs>
+        <clipPath id="dsClip"><circle cx="100" cy="100" r="96"/></clipPath>
+      </defs>
+      <!-- Main sphere - cyan -->
+      <circle cx="100" cy="100" r="96" fill="#00ccff"/>
+      <!-- Construction notches - right side, clipped to circle -->
+      <g clip-path="url(#dsClip)" fill="#0a0a18">
+        <rect x="170" y="108" width="30" height="6"/>
+        <rect x="160" y="118" width="40" height="7"/>
+        <rect x="165" y="129" width="35" height="5"/>
+        <rect x="155" y="138" width="45" height="8"/>
+        <rect x="162" y="150" width="38" height="5"/>
+        <rect x="168" y="159" width="32" height="6"/>
+        <rect x="158" y="169" width="42" height="7"/>
+        <rect x="172" y="180" width="28" height="5"/>
+        <rect x="150" y="56" width="50" height="5"/>
+        <rect x="158" y="65" width="42" height="6"/>
+        <rect x="165" y="75" width="35" height="5"/>
+        <rect x="155" y="84" width="45" height="7"/>
+      </g>
+      <!-- Trench line -->
+      <rect x="0" y="96" width="200" height="7" fill="#0a0a18"/>
+      <!-- S dish - replaces superlaser dish -->
+      <circle cx="72" cy="58" r="28" fill="#0a0a18"/>
+      <text x="72" y="72" text-anchor="middle" font-size="48" font-weight="900" fill="#00ccff" font-family="Helvetica,Arial,sans-serif" transform="rotate(-12,72,58)">S</text>
+    </svg>
+    <span>spacebook</span>
+  </div>
+  <input class="navbar-search" type="text" placeholder="Search Spacebook">
+  <div class="navbar-icons">
+    <!-- Home -->
+    <div class="nav-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+    </div>
+    <!-- Friend Requests (open) -->
+    <div class="nav-icon-wrapper">
+      <div class="nav-icon" onclick="var d=document.getElementById('frDropdown');d.style.display=d.style.display==='none'?'block':'none';">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <span class="nav-badge">1</span>
+      </div>
+      <!-- Friend Request Dropdown (click to toggle) -->
+      <div class="fr-dropdown" id="frDropdown" style="display:none;">
+        <div class="fr-dropdown-header">
+          Friend Requests
+          <a href="#">See All</a>
+        </div>
+        <div class="fr-request">
+          <img class="fr-request-avatar" src="assets/Badb.jpg" alt="Badb">
+          <div class="fr-request-info">
+            <div class="fr-request-name">Badb</div>
+            <div class="fr-request-mutual">3 mutual friends</div>
+            <div class="fr-request-buttons">
+              <button class="fr-btn-accept" onclick="document.getElementById('frDropdown').style.display='none';">Confirm</button>
+              <button class="fr-btn-decline">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Notifications -->
+    <div class="nav-icon">
+      <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+    </div>
+    <!-- Messenger -->
+    <div class="nav-icon">
+      <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+    </div>
+    <img class="nav-avatar" src="assets/pinball.jpg" alt="Pinball">
+  </div>
+</nav>
+
+<!-- ============================================================
+     PROFILE HEADER
+     ============================================================ -->
+<div class="profile-header">
+  <!-- EDIT: Cover photo - replace the placeholder div with an <img> tag -->
+  <div class="cover-photo">
+    <img src="assets/The Morrigan.jpg" alt="The Morrigan">
+  </div>
+
+  <div class="profile-info-bar">
+    <div class="profile-pic-wrapper">
+      <!-- EDIT: Profile picture - replace placeholder with <img class="profile-pic" src="photo.jpg"> -->
+      <img class="profile-pic" src="assets/pinball.jpg" alt="Tallon Creed">
+    </div>
+    <div class="profile-name-section">
+      <!-- EDIT: Character name and bio -->
+      <div class="profile-name">Tallon Creed</div>
+      <div class="profile-bio">Hello ladies, I'm Pinball.</div>
+    </div>
+    <div class="profile-actions">
+      <button class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M8 4a1 1 0 011 1v2h2a1 1 0 110 2H9v2a1 1 0 01-2 0V9H5a1 1 0 010-2h2V5a1 1 0 011-1z"/></svg>
+        Add Friend
+      </button>
+      <button class="btn btn-secondary">Message</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PROFILE TABS
+     ============================================================ -->
+<div class="profile-tabs">
+  <div class="profile-tab active">Posts</div>
+  <div class="profile-tab">About</div>
+  <div class="profile-tab">Friends</div>
+  <div class="profile-tab">Photos</div>
+  <div class="profile-tab">Videos</div>
+</div>
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<div class="main-layout">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Intro Card -->
+    <div class="sidebar-card">
+      <h3>Intro</h3>
+      <!-- EDIT: Change these intro items to match your character -->
+      <div class="intro-item">
+        <svg viewBox="0 0 24 24"><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2"/></svg>
+        <span>Works at <a href="#">996 GRIND T-DA-MX LLC</a></span>
+      </div>
+      <div class="intro-item">
+        <svg viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5zm0 7l-9-5 9-5 9 5-9 5z"/></svg>
+        <span>Studied at <a href="#">21st Air Ranger Corp (Venger Boys Hoo-Rah!)</a></span>
+      </div>
+      <div class="intro-item">
+        <svg viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span>Lives in <a href="#">The Mórrígan - Bunk 4</a></span>
+      </div>
+      <div class="intro-item">
+        <svg viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        <span>It's complicated</span>
+      </div>
+      <div class="intro-item">
+        <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Joined Spacebook in <strong>852 PF</strong></span>
+      </div>
+    </div>
+
+    <!-- Friends Card -->
+    <div class="sidebar-card">
+      <div class="friends-header">
+        <div>
+          <h3>Friends</h3>
+          <!-- EDIT: Friend count -->
+          <span class="count">17 friends</span>
+        </div>
+        <a href="#" style="font-size:14px;">See All</a>
+      </div>
+      <div class="friends-grid">
+        <!-- EDIT: Replace placeholders with <img src="friend-photo.jpg"> -->
+        <div class="friend-card">
+          <img src="assets/Velvet.jpg" alt="Velvet">
+          <div class="friend-name">Velvet</div>
+        </div>
+        <div class="friend-card">
+          <img src="assets/Spanners.jpg" alt="Spanners">
+          <div class="friend-name">Spanners</div>
+        </div>
+        <div class="friend-card">
+          <img src="assets/Meris.jpg" alt="Meris">
+          <div class="friend-name">Meris</div>
+        </div>
+        <div class="friend-card">
+          <img src="assets/Pinch.jpg" alt="Pinch">
+          <div class="friend-name">Pinch</div>
+        </div>
+        <div class="friend-card">
+          <img src="assets/Grey.jpg" alt="Grey">
+          <div class="friend-name">Grey</div>
+        </div>
+        <div class="friend-card">
+          <img src="assets/Choss.jpg" alt="Choss">
+          <div class="friend-name">Choss</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST FEED -->
+  <div class="feed">
+
+    <!-- Create Post Box -->
+    <div class="create-post">
+      <div class="create-post-top">
+        <img src="assets/pinball.jpg" alt="Pinball" style="border-radius:50%;object-fit:cover;">
+        <div class="create-post-input">What's on your mind, Pinball?</div>
+      </div>
+      <div class="create-post-actions">
+        <div class="create-action"><span class="dot dot-live"></span> Live Holo</div>
+        <div class="create-action"><span class="dot dot-photo"></span> Photo/Vid</div>
+        <div class="create-action"><span class="dot dot-feeling"></span> Feeling</div>
+      </div>
+    </div>
+
+    <!-- ====================================================
+         POST TEMPLATE GUIDE
+         =====================================================
+         To customise a post, edit these parts:
+           AVATAR:    src="assets/YourImage.jpg"
+           AUTHOR:    Name inside <a href="#">...</a>
+           TIME:      "2 hours ago" or any string
+           PRIVACY:   &#127760; Public | &#128274; Friends | &#128274; Only me
+           TEXT:      Inside .post-body <p> tags
+           SEE MORE:  Put hidden text in .post-body-hidden div
+           IMAGE:     <img src="assets/YourImage.jpg"> in .post-image
+           REACTIONS: Pick emojis + set count
+           COMMENTS:  Copy a .comment block, change avatar/name/text
+
+         To ADD a new post: copy everything between post-card divs.
+         To REMOVE image: delete the .post-image div.
+         To REMOVE comments: delete the .post-comments div.
+         To REMOVE "See more": delete the .see-more button and
+                               .post-body-hidden div, put all text
+                               in .post-body instead.
+         ==================================================== -->
+
+    <!-- ==================== POST 1 ==================== -->
+    <div class="post-card">
+      <div class="post-header">
+        <img class="post-avatar" src="assets/pinball.jpg" alt="">
+        <div class="post-meta">
+          <div class="post-author"><a href="#">Tallon Creed</a></div>
+          <div class="post-timestamp">2 hours ago &middot; <span class="post-privacy">&#127760; Public</span></div>
+        </div>
+        <div class="post-menu">&middot;&middot;&middot;</div>
+      </div>
+
+      <div class="post-body">
+        <p>Just docked at Nightfall Station. The atmo-recyclers smell like burnt synth-coffee and regret. Still better than Warren.</p>
+        <button class="see-more" onclick="this.nextElementSibling.classList.toggle('expanded');this.style.display='none';">See more</button>
+        <div class="post-body-hidden">
+          <p>Brick made me some hot Choclate-Starfish with his mothers recipe, it was heaven, he said it would taste even better if he didn't have to use<br>man-made cream. Holy shit! How good would Bricks brew be with natural cream. That man is a saint. If anyone needs me I'll be in Bunk 4 pretending the last three days didn't happen.</p>
+          <p><span class="hashtag">#SpacerLife</span> <span class="hashtag">#NightfallNights</span> <span class="hashtag">#VengerBoys</span></p>
+        </div>
+      </div>
+
+      <div class="post-image">
+        <img src="assets/Nightfall.jpg" alt="Nightfall Station">
+      </div>
+
+      <div class="post-reactions-bar">
+        <div class="reaction-icons">
+          <span class="reaction-emoji r-like">&#128077;</span>
+          <span class="reaction-count">2</span>
+        </div>
+        <div class="engagement-counts">
+          <a href="#">2 comments</a>
+        </div>
+      </div>
+
+      <div class="post-actions">
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/></svg> Like</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg> Comment</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share</div>
+      </div>
+
+      <div class="post-comments">
+        <!-- COMMENT: copy this block for more -->
+        <div class="comment">
+          <img class="comment-avatar" src="assets/Spanners.jpg" alt="">
+          <div>
+            <div class="comment-bubble">
+              <div class="comment-author">Spanners</div>
+              <div class="comment-text">You left your boots in the engine room again.</div>
+            </div>
+            <div class="comment-actions"><span>Like</span> <span>Reply</span> <span class="comment-time">1h</span></div>
+          </div>
+        </div>
+        <div class="comment">
+          <img class="comment-avatar" src="assets/Grey.jpg" alt="">
+          <div>
+            <div class="comment-bubble">
+              <div class="comment-author">Grey</div>
+              <div class="comment-text">Look as good at my age... you will not. May the Dawn be with you.</div>
+            </div>
+            <div class="comment-actions"><span>Like</span> <span>Reply</span> <span class="comment-time">45m</span></div>
+          </div>
+        </div>
+        <div class="write-comment">
+          <img src="assets/pinball.jpg" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+          <input class="write-comment-input" type="text" placeholder="Write a comment...">
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== POST 2 ==================== -->
+    <div class="post-card">
+      <div class="post-header">
+        <img class="post-avatar" src="assets/Choss.jpg" alt="">
+        <div class="post-meta">
+          <div class="post-author"><a href="#">Choss</a></div>
+          <div class="post-timestamp">5 hours ago &middot; <span class="post-privacy">&#128274; Friends</span></div>
+        </div>
+        <div class="post-menu">&middot;&middot;&middot;</div>
+      </div>
+
+      <div class="post-body">
+        <p>Does anyone know a good mechanic on Warren? Nav-Core keeps glitching out and trying to crash the ship. Asking for a friend. P.S What error code is HSTR?</p>
+      </div>
+
+      <div class="post-reactions-bar">
+        <div class="reaction-icons">
+          <span class="reaction-emoji r-like">&#128077;</span>
+          <span class="reaction-count">4</span>
+        </div>
+        <div class="engagement-counts">
+          <a href="#">1 comment</a>
+        </div>
+      </div>
+
+      <div class="post-actions">
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/></svg> Like</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg> Comment</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share</div>
+      </div>
+    </div>
+
+    <!-- ==================== POST 3: SHARED LINK ==================== -->
+    <div class="post-card">
+      <div class="post-header">
+        <img class="post-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%23192a56' width='40' height='40' rx='20'/%3E%3Ctext x='20' y='27' text-anchor='middle' fill='%2300ccff' font-size='14' font-weight='bold'%3ELNN%3C/text%3E%3C/svg%3E" alt="">
+        <div class="post-meta">
+          <div class="post-author"><a href="#">Lithios News Network</a></div>
+          <div class="post-timestamp">8 hours ago &middot; <span class="post-privacy">&#127760; Public</span></div>
+        </div>
+        <div class="post-menu">&middot;&middot;&middot;</div>
+      </div>
+
+      <div class="post-body">
+        <p>BREAKING: Three people were murdered in a downtown Allnatt Station pawnbroker's office. Donton Task (the owner) and his security detail (Sugg Munton and Hench Ali) were all killed in what police described as an "intense physical altercation".</p>
+        <button class="see-more" onclick="this.nextElementSibling.classList.toggle('expanded');this.style.display='none';">See more</button>
+        <div class="post-body-hidden">
+          <p>The nature of the men's injuries, and the unusual fact that weapons were not used, suggest the killer was possibly a Strength-Drug Synther or bodybuilder. Nobody of that nature was seen entering the shop by witnesses and the security-vid was scrambled by a sophisticated hacking attack.</p>
+          <p>Theft was clearly the motive as the business safe was broken open and 6 credits removed by the attacker. The mystery deepened when it was found that several expensive and easily transportable items belonging to Task were left untouched, and not only that, items not on the shops space-ERP system were seemingly "deposited" by the killer &ndash; sources report the items were rare electronic parts used in an FTL drive.</p>
+          <p>Police are still formulating theories and those at the scene would not comment at this time.</p>
+        </div>
+      </div>
+
+      <div class="link-preview">
+        <div class="link-preview-image">
+          <img src="assets/alnat-crime-report.png" alt="Allnatt Crime Scene">
+        </div>
+        <div class="link-preview-text">
+          <div class="link-preview-domain">lithios-news.net</div>
+          <div class="link-preview-title">Police deny Lithios gangs wack rivals with "Techno Wrestlers"</div>
+          <div class="link-preview-desc">After the violent death of Donton Task an Allnatt Station pawnbroker in a bizarre robbery Police Commissioner Turbel took the unusual move to...</div>
+        </div>
+      </div>
+
+      <div class="post-reactions-bar">
+        <div class="reaction-icons">
+          <span class="reaction-emoji r-angry">&#128545;</span>
+          <span class="reaction-emoji r-sad">&#128546;</span>
+          <span class="reaction-emoji r-wow">&#128558;</span>
+          <span class="reaction-emoji r-angry">&#128545;</span>
+          <span class="reaction-count">874</span>
+        </div>
+        <div class="engagement-counts">
+          <a href="#">312 comments</a> &middot; <a href="#">156 shares</a>
+        </div>
+      </div>
+
+      <div class="post-actions">
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/></svg> Like</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg> Comment</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share</div>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="post-comments">
+        <div class="comment">
+          <img class="comment-avatar" src="assets/bigly.jpg" alt="">
+          <div>
+            <div class="comment-bubble">
+              <div class="comment-author">Bigly</div>
+              <div class="comment-text">OMG we're not safe in our beds anymore.</div>
+            </div>
+            <div class="comment-actions"><span>Like</span> <span>Reply</span> <span class="comment-time">2h</span></div>
+          </div>
+        </div>
+        <div class="comment">
+          <img class="comment-avatar" src="assets/shit-boy.jpg" alt="">
+          <div>
+            <div class="comment-bubble">
+              <div class="comment-author">Menter</div>
+              <div class="comment-text">These crims need to be sent to the army. None of them would last a day in 132 Sanitation Corp. You feelin me. Shit-Boys Hoo-Raa!</div>
+            </div>
+            <div class="comment-actions"><span>Like</span> <span>Reply</span> <span class="comment-time">1h</span></div>
+          </div>
+        </div>
+        <div class="comment">
+          <img class="comment-avatar" src="assets/Grey.jpg" alt="">
+          <div>
+            <div class="comment-bubble">
+              <div class="comment-author">Grey</div>
+              <div class="comment-text">The light of the Sterile Dawn has reached their souls. A blissful peace envelopes them. Woe unto us who toil on in this filthy plane. I, Brother Grey, can heal your suffering. Videos of my sermons are at realseteriledawn122.gd and LonelyFans#Sterile_Dawn (use my code FEET for 20% off). Payment via Revolut @doriankreel18 - Starbank Force-Send (TM) only accepted from verified accounts.</div>
+            </div>
+            <div class="comment-actions"><span>Like</span> <span>Reply</span> <span class="comment-time">45m</span></div>
+          </div>
+        </div>
+        <div class="write-comment">
+          <img src="assets/pinball.jpg" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+          <input class="write-comment-input" type="text" placeholder="Write a comment...">
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== POST 4: SPONSORED ==================== -->
+    <div class="post-card">
+      <div class="post-header">
+        <img class="post-avatar" src="assets/kairon2.jpg" alt="Kairon Therapeutics">
+        <div class="post-meta">
+          <div class="post-author"><a href="#">Kairon Therapeutics</a></div>
+          <div class="post-timestamp">Sponsored &middot; <span class="post-privacy">&#127760;</span></div>
+        </div>
+        <div class="post-menu">&middot;&middot;&middot;</div>
+      </div>
+
+      <div class="post-body">
+        <p><strong>Your health. Reimagined.</strong></p>
+        <button class="see-more" onclick="this.nextElementSibling.classList.toggle('expanded');this.style.display='none';">See more</button>
+        <div class="post-body-hidden">
+          <p>Kairon Therapeutics is pioneering the future of human wellness across the Procyon Sector. Our clinics offer gene-level diagnostics, neural restoration, and personalised treatment plans.</p>
+          <p>Visit your nearest Kairon clinic today. <em>Because you deserve to be whole.</em></p>
+        </div>
+      </div>
+
+      <div class="post-image">
+        <img src="assets/kairon-ad.jpeg" alt="Kairon Therapeutics">
+      </div>
+
+      <div class="post-reactions-bar">
+        <div class="reaction-icons">
+          <span class="reaction-emoji r-like">&#128077;</span>
+          <span class="reaction-emoji r-love">&#10084;</span>
+          <span class="reaction-emoji r-love">&#10084;</span>
+          <span class="reaction-emoji r-like">&#128077;</span>
+          <span class="reaction-emoji r-love">&#10084;</span>
+          <span class="reaction-count">47.8K</span>
+        </div>
+        <div class="engagement-counts">
+          <a href="#">12.4K comments</a> &middot; <a href="#">8.9K shares</a>
+        </div>
+      </div>
+
+      <div class="post-actions">
+        <div class="post-action-btn">
+          <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/></svg>
+          Like
+        </div>
+        <div class="post-action-btn">
+          <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Comment
+        </div>
+        <div class="post-action-btn">
+          <svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+          Share
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== POST 5: PINBALL'S THOUGHTS ==================== -->
+    <div class="post-card">
+      <div class="post-header">
+        <img class="post-avatar" src="assets/pinball.jpg" alt="">
+        <div class="post-meta">
+          <div class="post-author"><a href="#">Tallon Creed</a></div>
+          <div class="post-timestamp">1 day ago &middot; <span class="post-privacy">&#127760; Public</span></div>
+        </div>
+        <div class="post-menu">&middot;&middot;&middot;</div>
+      </div>
+
+      <div class="post-body">
+        <p>Hot people should not be excluded from political office because of their genetics. It really boils my piss to hear the criticism of Luna Virelle from spacechuds saying she's too young to be in charge of Governor Mlakeiths Department of Military Procurement.</p>
+        <button class="see-more" onclick="this.nextElementSibling.classList.toggle('expanded');this.style.display='none';">See more</button>
+        <div class="post-body-hidden">
+          <p>You don't know what's in her heart or how intelligent she is. Just because neckblasters with no passive income and don't lift (I'm at 95Kgs C&amp;J BTW - shout out in the comments) will never get to smash doesn't mean she isn't competent. Good looks is a disability. Take it from me - the struggles I've had you wouldn't believe.</p>
+        </div>
+      </div>
+
+      <div class="post-reactions-bar">
+        <div class="reaction-icons">
+          <span class="reaction-emoji r-like">&#128077;</span>
+          <span class="reaction-count">3</span>
+        </div>
+        <div class="engagement-counts">
+          <a href="#">2 comments</a>
+        </div>
+      </div>
+
+      <div class="post-actions">
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/></svg> Like</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg> Comment</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share</div>
+      </div>
+
+      <div class="post-comments">
+        <div class="comment">
+          <img class="comment-avatar" src="assets/Kessy.jpg" alt="">
+          <div>
+            <div class="comment-bubble">
+              <div class="comment-author">Prof. Lynie Kessarine M.D.</div>
+              <div class="comment-text">Pinball can you get a message through to Elias to send me a StarLink. I still can't reach him. He's supposed to post a vid-inject to the clinic.</div>
+            </div>
+            <div class="comment-actions"><span>Like</span> <span>Reply</span> <span class="comment-time">22h</span></div>
+          </div>
+        </div>
+        <div class="comment">
+          <img class="comment-avatar" src="assets/Pinch.jpg" alt="">
+          <div>
+            <div class="comment-bubble">
+              <div class="comment-author">Dr. Elias Stackhouse</div>
+              <div class="comment-text">Kessy I'm on Spacebook. I can see all your messages. I posted the vid-inject. I told you three times. Can you get Amber to do the Spacebook for you or something.</div>
+            </div>
+            <div class="comment-actions"><span>Like</span> <span>Reply</span> <span class="comment-time">20h</span></div>
+          </div>
+        </div>
+        <div class="write-comment">
+          <img src="assets/pinball.jpg" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+          <input class="write-comment-input" type="text" placeholder="Write a comment...">
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== POST 6: VELVET ==================== -->
+    <div class="post-card">
+      <div class="post-header">
+        <img class="post-avatar" src="assets/Velvet.jpg" alt="">
+        <div class="post-meta">
+          <div class="post-author"><a href="#">Vex Arden</a></div>
+          <div class="post-timestamp">2 days ago &middot; <span class="post-privacy">&#128274; Friends</span></div>
+        </div>
+        <div class="post-menu">&middot;&middot;&middot;</div>
+      </div>
+
+      <div class="post-body">
+        <p>Hey, I got a strange rash. You need to call me.</p>
+      </div>
+
+      <div class="post-reactions-bar">
+        <div class="reaction-icons">
+          <span class="reaction-count"></span>
+        </div>
+        <div class="engagement-counts">
+          <a href="#">0 comments</a>
+        </div>
+      </div>
+
+      <div class="post-actions">
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/></svg> Like</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg> Comment</div>
+        <div class="post-action-btn"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share</div>
+      </div>
+    </div>
+
+  </div><!-- /feed -->
+</div><!-- /main-layout -->
+
+</body>
+</html>
